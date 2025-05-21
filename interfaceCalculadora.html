@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Derivadas e Integrais</title>
+  <style>
+    :root {
+      --bg-principal: #1c3556;
+      --bg-secundario: #cfd6de;
+      --texto: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-secundario);
+      color: var(--texto);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      background-color: var(--bg-principal);
+      padding: 20px;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .input-section {
+      background-color: var(--bg-secundario);
+      padding: 15px;
+      text-align: center;
+    }
+
+    .input-section input {
+      width: 80%;
+      padding: 10px;
+      font-size: 1rem;
+      margin-top: 10px;
+    }
+
+    .keyboards {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      padding: 20px;
+      background-color: var(--bg-principal);
+    }
+
+    .keyboard {
+      display: grid;
+      grid-template-columns: repeat(4, 60px);
+      gap: 10px;
+    }
+
+    .keyboard button {
+      padding: 15px;
+      font-size: 1rem;
+      background-color: #2e4e78;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .buttons-section {
+      background-color: var(--bg-secundario);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .buttons-section button {
+      margin: 10px auto;
+      width: 80%;
+      padding: 15px;
+      background-color: var(--bg-principal);
+      color: var(--texto);
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .accordion {
+      width: 100%;
+    }
+
+    .accordion-item {
+      background-color: var(--bg-principal);
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+
+    .accordion-header {
+      padding: 15px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .accordion-body {
+      display: none;
+      padding: 15px;
+      background-color: #284a70;
+    }
+
+    .graph-section {
+      background-color: var(--bg-principal);
+      height: 400px;
+      margin-top: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>Calculadora de Derivadas e Integrais</header>
+
+    <div class="input-section">
+      <input type="text" placeholder="Digite seu problema" id="inputFuncao">
+    </div>
+
+    <div class="keyboards">
+      <div class="keyboard" id="keyboard1">
+        <!-- Botões da primeira parte do teclado -->
+        <button>7</button><button>8</button><button>9</button><button>/</button>
+        <button>4</button><button>5</button><button>6</button><button>*</button>
+        <button>1</button><button>2</button><button>3</button><button>-</button>
+        <button>0</button><button>.</button><button>x</button><button>+</button>
+        <button>(</button><button>)</button><button>x^</button><button>√</button>
+      </div>
+
+      <div class="keyboard" id="keyboard2">
+        <!-- Botões adicionais -->
+        <button>sin</button><button>cos</button><button>tan</button><button>^</button>
+        <button>ln</button><button>log</button><button>e</button><button>π</button>
+        <button>^2</button><button>^3</button><button>1/x</button><button>|x|</button>
+        <button>DEL</button><button>AC</button><button>=</button><button>x!</button>
+      </div>
+    </div>
+
+    <div class="buttons-section">
+      <button>A FUNÇÃO INSERIDA FOI:</button>
+      <button>A DERIVADA DA FUNÇÃO É</button>
+    </div>
+
+    <div class="accordion">
+      <div class="accordion-item">
+        <div class="accordion-header" onclick="toggleAccordion(this)">PASSO 1: derivada</div>
+        <div class="accordion-body">Conteúdo do passo 1</div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header" onclick="toggleAccordion(this)">PASSO 2: ponto crítico</div>
+        <div class="accordion-body">Conteúdo do passo 2</div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header" onclick="toggleAccordion(this)">PASSO 3: checagem dos pontos críticos</div>
+        <div class="accordion-body">Conteúdo do passo 3</div>
+      </div>
+      <div class="accordion-item">
+        <div class="accordion-header" onclick="toggleAccordion(this)">PASSO 4: substituição</div>
+        <div class="accordion-body">Conteúdo do passo 4</div>
+      </div>
+    </div>
+
+    <div class="graph-section">
+      <!-- Aqui depois podemos embutir um gráfico (Plotly, Chart.js, Math.js, etc) -->
+      GRÁFICO AQUI
+    </div>
+  </div>
+
+  <script>
+    function toggleAccordion(header) {
+      const body = header.nextElementSibling;
+      body.style.display = body.style.display === 'block' ? 'none' : 'block';
+    }
+  </script>
+</body>
+</html>
