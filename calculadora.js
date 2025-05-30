@@ -226,7 +226,7 @@ document.getElementById('btnCalcular').addEventListener('click', function () {
     }
     document.getElementById('passo2').style.display = "block";
 
-    // Passo 3: Checagem na equação original
+    // Passo 3: Máximos e Mínimos: Checagem na equação original
     if (pontos.length > 0) {
         document.getElementById('passo3').innerHTML = pontos.map(x =>
             `s''(${x.toFixed(2)}) = ${calcularEquacao(entrada, x).toFixed(2)}`
@@ -241,7 +241,7 @@ document.getElementById('btnCalcular').addEventListener('click', function () {
     document.getElementById('passo4').textContent = montarEquacao(derivada2);
     document.getElementById('passo4').style.display = "block";
 
-    // Passo 5: Checagem na derivada de segunda ordem
+    // Passo 5: Máximos e Mínimos: Checagem na derivada de segunda ordem
     if (pontos.length > 0) {
         document.getElementById('passo5').innerHTML = pontos.map(x =>
             `s''(${x.toFixed(2)}) = ${calcularEquacao(derivada2, x).toFixed(2)}`
