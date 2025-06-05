@@ -115,6 +115,9 @@ header {
   background-color: #284a70;
 }
 
+#accordionDerivada, #accordionIntegral {
+    display: none;
+}
 .graph-section {
   background-color: var(--bg-principal);
   height: 400px;

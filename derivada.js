@@ -3,7 +3,8 @@ const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
-// Função para obter entrada do usuário
+
+// Função para obter entrada do usuário 
 function obterEntrada(pergunta) {
     return new Promise((resolve) => {
         rl.question(pergunta, (resposta) => {
@@ -11,6 +12,7 @@ function obterEntrada(pergunta) {
         });
     });
 }
+
 // Função para capturar dados da equação
 async function entradaDeDados() {
     let equacao = [];
@@ -39,6 +41,7 @@ async function entradaDeDados() {
     }
     return { equacao, constante };
 }
+
 // Função para montar a equação formatada
 function montarEquacao(entrada) {
     if (!entrada || !entrada.equacao || entrada.equacao.length === 0) {
@@ -54,9 +57,12 @@ function montarEquacao(entrada) {
         } else if (i > 0 && entrada.equacao[i].coeficiente < 0) {
             verEquacao += " ";
         }
-        verEquacao += entrada.equacao[i].coeficiente + "x";
-        if (entrada.equacao[i].expoente > 1) {
-            verEquacao += "^" + entrada.equacao[i].expoente;
+        verEquacao += entrada.equacao[i].coeficiente;
+        if (entrada.equacao[i].expoente !== 0) {
+            verEquacao += "x";
+            if (entrada.equacao[i].expoente > 1) {
+                verEquacao += "^" + entrada.equacao[i].expoente;
+            }
         }
     }
     if (entrada.constante && (entrada.constante[0] !== 1 || entrada.constante[1] !== 1)) {
@@ -64,6 +70,7 @@ function montarEquacao(entrada) {
     }
     return verEquacao;
 }
+
 // Função para calcular a derivada
 function calculaDerivada(entrada) {
     if (!entrada || !entrada.equacao || entrada.equacao.length === 0) {
@@ -82,6 +89,8 @@ function calculaDerivada(entrada) {
     }
     return { equacao: derivada, constante: constanteMultiplicadora };
 }
+
+//função para identificar pontos críticos
 function pontoCritico(resultado) {
     if (!Array.isArray(resultado) || resultado.length === 0) {
         console.log("Erro: resultado não é um array válido.");
@@ -112,7 +121,7 @@ function pontoCritico(resultado) {
             console.log("Não há pontos críticos reais (Delta < 0).");
         }
     }
-    // Caso polinômio de grau ≥ 3 - Método direto baseado na equação original
+    // Caso expoente ≥ 3 
     else if (maiorExpoente >= 3) {
         console.log("Equação de grau ≥ 3 detectada. Utilizando método de análise de coeficientes.");
         let coeficientes = resultado.map(term => ({ coef: term.coeficiente, exp: term.expoente }));
@@ -138,9 +147,10 @@ function pontoCritico(resultado) {
         console.log("Nenhum ponto crítico foi encontrado.");
         return [];
     }
-    console.log(`Pontos críticos encontrados: ${criticos.join(", ")}`);
+    console.log(`Pontos críticos encontrados: ${criticos.map(p => p.toFixed(2)).join(", ")}`);
     return criticos;
 }
+
 // Função para calcular a equação substituindo pontos críticos
 function calcularEquacao(entrada, x) {
     let resposta = 0;
@@ -151,6 +161,34 @@ function calcularEquacao(entrada, x) {
     resposta *= constanteMultiplicadora;
     return resposta;
 }
+
+//calcular integral por aproximação usando o método do ponto médio de Riemann
+function pontoMedioRiemann(entrada, a, b, n) {
+    let soma = 0;
+    let deltaX = (b - a) / n;
+    for (let i = 0; i < n; i++) {
+        let x = a + (i + 0.5) * deltaX; // Ponto médio
+        // Calcula o valor da equação para x
+        soma += calcularEquacao(entrada, x) * deltaX;
+    }
+    return soma;
+}
+
+//cálculo integrar por soma exata usando o método soma de Riemann
+function calculaIntegral(entrada) {
+    let integral = [];
+    for (let i = 0; i < entrada.equacao.length; i++) {
+        let termo = entrada.equacao[i];
+        let novoExpoente = termo.expoente + 1;
+        // Para constantes (expoente 0), novoExpoente será 1
+        integral.push({
+            coeficiente: termo.coeficiente / novoExpoente,
+            expoente: novoExpoente
+        });
+    }
+    return { equacao: integral, constante: entrada.constante };
+}
+
 // Função principal que organiza a execução do programa
 async function iniciarPrograma() {
     let entrada = await entradaDeDados();
@@ -158,6 +196,7 @@ async function iniciarPrograma() {
         rl.close();
         return;
     }
+    console.log("\n---------------Cálculo da derivada--------------- ");
     console.log("Equação: ", montarEquacao(entrada));
     let resultado = calculaDerivada(entrada);
     console.log("Derivada: ", montarEquacao(resultado));
@@ -176,6 +215,7 @@ async function iniciarPrograma() {
     } else {
         console.log("Nenhum ponto crítico foi encontrado.");
     }
+
     rl.question("Deseja definir limites mínimo e máximo? (s/n): ", resposta => {
         if (resposta.trim().toLowerCase() === "s") {
             rl.question("Informe o limite mínimo: ", limiteMinStr => {
@@ -192,20 +232,40 @@ async function iniciarPrograma() {
                         rl.close();
                         return;
                     }
-                    // **Correção na filtragem dos pontos críticos**
-                    let pontosDentroLimite = pontosCriticos.filter(x => x >= limiteMin && x <= limiteMax);
-                    if (pontosDentroLimite.length === 0) {
-                        console.log(`Nenhum ponto crítico está dentro do intervalo [${limiteMin}, ${limiteMax}].`);
-                    } else {
-                        pontosDentroLimite.forEach(x => {
-                            let sFuncao = calcularEquacao(entrada, x);
-                            let sDerivadaSegunda = calcularEquacao(resultado2, x);
-                            console.log(`Ponto crítico dentro do intervalo: x = ${x}`);
-                            console.log(`s(${x}) na função original: ${sFuncao.toFixed(2)}`);
-                            console.log(`s(${x}) na segunda derivada: ${sDerivadaSegunda.toFixed(2)}`);
-                        });
-                    }
-                    rl.close();
+                    rl.question("Informe o número de partições para o método do ponto médio de Riemann: ", nStr => {
+                        let n = parseInt(nStr);
+                        if (isNaN(n) || n <= 0) {
+                            console.log("Número de partições inválido.");
+                            rl.close();
+                            return;
+                        }
+
+
+                        // Resultado final conforme os limites estipulados
+                        let pontosDentroLimite = pontosCriticos.filter(x => x >= limiteMin && x <= limiteMax);
+                        if (pontosDentroLimite.length === 0) {
+                            console.log(`Nenhum ponto crítico está dentro do intervalo [${limiteMin}, ${limiteMax}].`);
+                        } else {
+                            pontosDentroLimite.forEach(x => {
+                                let sFuncao = calcularEquacao(entrada, x);
+                                let sDerivadaSegunda = calcularEquacao(resultado2, x);
+                                console.log(`Resposta considerando os limites estabelecidos: Ponto crítico ${x.toFixed(2)}:`);
+                                console.log(`s(${x.toFixed(2)}) na função original: ${sFuncao.toFixed(2)}`);
+                                console.log(`s(${x.toFixed(2)}) na segunda derivada: ${sDerivadaSegunda.toFixed(2)}`);
+                            });
+                        }
+
+                        // Integral
+                        console.log(" \n---------------Cálculo da integral--------------- ");
+                        const integral = calculaIntegral(entrada);
+                        console.log("Cálculo da integral: ", montarEquacao(integral));
+                        let resultadoPontoMedio = pontoMedioRiemann(entrada, limiteMin, limiteMax, n);
+                        console.log(`Resultado do ponto médio de Riemann: ${resultadoPontoMedio.toFixed(2)}`);
+                        let integralExata = calcularEquacao(integral, limiteMax) - calcularEquacao(integral, limiteMin);
+                        console.log(`Resultado da integral exata: ${integralExata.toFixed(2)}`);
+                        console.log("--------------------------------------------------");
+                        rl.close();
+                    });
                 });
             });
         } else {
@@ -213,6 +273,9 @@ async function iniciarPrograma() {
             rl.close();
         }
     });
+
 }
-// Executa o programa
+
+// Executa o programa 
 iniciarPrograma();
+

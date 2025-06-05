@@ -82,27 +82,25 @@ function parseFuncaoParaObjeto(funcaoStr) {
 
 // --- MONTAR EQUAÇÃO FORMATADA ---
 function montarEquacao(entrada) {
-    if (!entrada || !entrada.equacao || entrada.equacao.length === 0) return "";
-
+    if (!entrada || !entrada.equacao || entrada.equacao.length === 0) {
+        return "Equação inválida";
+    }
     let verEquacao = "";
-
     if (entrada.constante && (entrada.constante[0] !== 1 || entrada.constante[1] !== 1)) {
         verEquacao += entrada.constante[0] + "/" + entrada.constante[1] + "*(";
     }
     for (let i = 0; i < entrada.equacao.length; i++) {
-        let termo = entrada.equacao[i];
-        if (i > 0 && termo.coeficiente > 0) {
+        if (i > 0 && entrada.equacao[i].coeficiente > 0) {
             verEquacao += " + ";
-        } else if (i > 0 && termo.coeficiente < 0) {
+        } else if (i > 0 && entrada.equacao[i].coeficiente < 0) {
             verEquacao += " ";
         }
-        if (termo.expoente > 0) {
-            verEquacao += termo.coeficiente + "x";
-            if (termo.expoente > 1) {
-                verEquacao += "^" + termo.expoente;
+        verEquacao += entrada.equacao[i].coeficiente;
+        if (entrada.equacao[i].expoente !== 0) {
+            verEquacao += "x";
+            if (entrada.equacao[i].expoente > 1) {
+                verEquacao += "^" + entrada.equacao[i].expoente;
             }
-        } else {
-            verEquacao += termo.coeficiente;
         }
     }
     if (entrada.constante && (entrada.constante[0] !== 1 || entrada.constante[1] !== 1)) {
@@ -196,9 +194,51 @@ function calcularEquacao(entrada, x) {
     return resposta;
 }
 
-// --- BOTÃO CALCULAR ---
-document.getElementById('btnCalcular').addEventListener('click', function () {
+
+//calcular integral por aproximação usando o método do ponto médio de Riemann
+function pontoMedioRiemann(entrada, a, b, n) {
+    let soma = 0;
+    let deltaX = (b - a) / n;
+    for (let i = 0; i < n; i++) {
+        let x = a + (i + 0.5) * deltaX; // Ponto médio
+        // Calcula o valor da equação para x
+        soma += calcularEquacao(entrada, x) * deltaX;
+    }
+    return soma;
+}
+
+//cálculo integrar por soma exata usando o método soma de Riemann
+function calculaIntegral(entrada) {
+    let integral = [];
+    for (let i = 0; i < entrada.equacao.length; i++) {
+        let termo = entrada.equacao[i];
+        let novoExpoente = termo.expoente + 1;
+        // Para constantes (expoente 0), novoExpoente será 1
+        integral.push({
+            coeficiente: termo.coeficiente / novoExpoente,
+            expoente: novoExpoente
+        });
+    }
+    return { equacao: integral, constante: entrada.constante };
+}
+
+function mostrarSessaoDerivada() {
+    document.getElementById('accordionDerivada').style.display = 'block';
+    document.getElementById('accordionIntegral').style.display = 'none';
+}
+
+function mostrarSessaoIntegral() {
+    document.getElementById('accordionDerivada').style.display = 'none';
+    document.getElementById('accordionIntegral').style.display = 'block';
+}
+alert("Informe a função a ser calculada, os limites mínimo(a) e máximo(b), e o número de partições(n) para o cálculo da integral.");
+
+// --- BOTÃO CALCULAR DERIVADA ---
+document.getElementById('btnDerivada').addEventListener('click', function () {
+    mostrarSessaoDerivada();
+
     const funcao = document.getElementById('inputFuncao').value;
+
     if (!funcao.trim()) {
         document.getElementById('funcaoMostrada').textContent = "Digite uma função!";
         document.getElementById('derivadaMostrada').textContent = "";
@@ -211,6 +251,7 @@ document.getElementById('btnCalcular').addEventListener('click', function () {
 
     // 2. Montar equação formatada
     document.getElementById('funcaoMostrada').textContent = "Função formatada: " + montarEquacao(entrada);
+   
     
     // Passo 1: Derivada detalhada
     const derivada = calculaDerivada(entrada);
@@ -250,11 +291,69 @@ document.getElementById('btnCalcular').addEventListener('click', function () {
         document.getElementById('passo5').textContent = "Nenhum ponto crítico encontrado.";
     }
     document.getElementById('passo5').style.display = "block";
+
+    // Passo 6: Análise dos pontos críticos dentro dos limites
+    const limiteMin = parseFloat(document.getElementById('limiteMin').value);
+    const limiteMax = parseFloat(document.getElementById('limiteMax').value);
+
+    let pontosDentroLimite = pontos.filter(x => x >= limiteMin && x <= limiteMax);
+
+    let html = "<strong>Análise dos pontos críticos dentro dos limites:</strong><br>";
+    if (isNaN(limiteMin) || isNaN(limiteMax)) {
+        html += "Defina limites mínimo e máximo válidos.";
+    } else if (pontosDentroLimite.length === 0) {
+        html += `Nenhum ponto crítico está dentro do intervalo [${limiteMin}, ${limiteMax}].`;
+    } else {
+        pontosDentroLimite.forEach(x => {
+            let sFuncao = calcularEquacao(entrada, x);
+            let sDerivadaSegunda = calcularEquacao(derivada2, x);
+            html += `<div>
+                <strong>Ponto crítico ${x.toFixed(2)}:</strong><br>
+                s(${x.toFixed(2)}) na função original: ${sFuncao.toFixed(2)}<br>
+                s(${x.toFixed(2)}) na segunda derivada: ${sDerivadaSegunda.toFixed(2)}
+            </div>`;
+        });
+    }
+
+const divLimite = document.getElementById('passo6');
+divLimite.innerHTML = html;
+divLimite.style.display = "block";
 });
 
-// --- ACORDEON (Accordion) ---
-function toggleAccordion(header) {
-    const body = header.nextElementSibling;
-    body.style.display = (body.style.display === "block") ? "none" : "block";
-}
+// --- BOTÃO CALCULAR INTEGRAL ---
+document.getElementById('btnIntegral').addEventListener('click', function () {
+    mostrarSessaoIntegral();
 
+    const funcao = document.getElementById('inputFuncao').value;
+    const entrada = parseFuncaoParaObjeto(funcao);
+
+    //Passo 7: Cálculo da integral
+    let integral = calculaIntegral(entrada);
+    document.getElementById('passo7').innerText = montarEquacao(integral);
+    document.getElementById('passo7').style.display = "block";
+   
+    //Passo 8: Cálculo da integral por aproximação
+    const limiteMin = parseFloat(document.getElementById('limiteMin').value);   
+    const limiteMax = parseFloat(document.getElementById('limiteMax').value);
+    const particoes = parseInt(document.getElementById('particoes').value);
+    if (isNaN(limiteMin) || isNaN(limiteMax) || limiteMin >= limiteMax) {
+        alert("Por favor, insira limites válidos.");
+        return;
+    }
+    let integralAproximada = pontoMedioRiemann(entrada, limiteMin, limiteMax, particoes);
+    document.getElementById('passo8').innerText = integralAproximada.toFixed(2);
+    //abrirAccordion('passo8');
+    document.getElementById('passo8').style.display = "block";
+
+    //Passo 9: Cálculo da integral por soma exata
+    let integralExata = calcularEquacao(integral, limiteMax) - calcularEquacao(integral, limiteMin);
+    document.getElementById('passo9').innerText = integralExata.toFixed(2);
+    //abrirAccordion('passo9');
+    document.getElementById('passo9').style.display = "block";
+});
+
+// Função para abrir apenas o acordeão desejado
+function abrirAccordion(id) {
+    document.querySelectorAll('.accordion-body').forEach(div => div.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+}
