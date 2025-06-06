@@ -151,7 +151,7 @@ function pontoCritico(resultado) {
     return criticos;
 }
 
-// Função para calcular a equação substituindo pontos críticos
+// Função para calcular a equação substituindo por valores determinados de x
 function calcularEquacao(entrada, x) {
     let resposta = 0;
     for (let i = 0; i < entrada.equacao.length; i++) {
@@ -187,6 +187,22 @@ function calculaIntegral(entrada) {
         });
     }
     return { equacao: integral, constante: entrada.constante };
+}
+
+//calcular integral por aproximação usando a regra do Trapézio
+function regraTrapezio(entrada, a, b, n) {
+    let soma = 0;
+    let h = (b - a) / n;
+
+    for (let i = 0; i < n+1; i++) {        
+        let x = a + (i * h); 
+        if (x === a || x === b) {
+            soma += calcularEquacao(entrada, x);
+        } else {
+            soma += 2 * calcularEquacao(entrada, x);
+        }
+    }
+    return soma * h / 2;
 }
 
 // Função principal que organiza a execução do programa
@@ -232,7 +248,7 @@ async function iniciarPrograma() {
                         rl.close();
                         return;
                     }
-                    rl.question("Informe o número de partições para o método do ponto médio de Riemann: ", nStr => {
+                    rl.question("Informe o número de partições para cálculo de integral: ", nStr => {
                         let n = parseInt(nStr);
                         if (isNaN(n) || n <= 0) {
                             console.log("Número de partições inválido.");
@@ -260,9 +276,11 @@ async function iniciarPrograma() {
                         const integral = calculaIntegral(entrada);
                         console.log("Cálculo da integral: ", montarEquacao(integral));
                         let resultadoPontoMedio = pontoMedioRiemann(entrada, limiteMin, limiteMax, n);
-                        console.log(`Resultado do ponto médio de Riemann: ${resultadoPontoMedio.toFixed(2)}`);
+                        console.log(`Resultado do ponto médio de Riemann: ${resultadoPontoMedio.toFixed(4)}`);
+                        let calculoTrapezio = regraTrapezio(entrada, limiteMin, limiteMax, n);
+                        console.log(`Resultado da Regra do Trapézio: ${calculoTrapezio.toFixed(4)}`);
                         let integralExata = calcularEquacao(integral, limiteMax) - calcularEquacao(integral, limiteMin);
-                        console.log(`Resultado da integral exata: ${integralExata.toFixed(2)}`);
+                        console.log(`Resultado da integral exata: ${integralExata.toFixed(4)}`);
                         console.log("--------------------------------------------------");
                         rl.close();
                     });
