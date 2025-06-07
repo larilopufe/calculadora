@@ -205,6 +205,44 @@ function regraTrapezio(entrada, a, b, n) {
     return soma * h / 2;
 }
 
+// calcular integral por aproximação usando a Regra de Simpson 1/3
+function simpsonUmTerco(entrada, a, b, n) {
+    if (n % 2 !== 0) {
+        n += 1;
+    }
+    let h = (b - a) / n;
+    let soma = calcularEquacao(entrada, a) + calcularEquacao(entrada, b);
+
+    for (let i = 1; i < n; i++) {
+        let x = a + i * h;
+        if (i % 2 === 0) {
+            soma += 2 * calcularEquacao(entrada, x);
+        } else {
+            soma += 4 * calcularEquacao(entrada, x);
+        }
+    }
+    return (h / 3) * soma;
+}
+
+// calcular integral por aproximação usando a Regra de Simpson 3/8
+function simpsonTresOitavos(entrada, a, b, n) {
+    if (n % 3 !== 0) {
+        n += 3 - (n % 3);
+    }
+    let h = (b - a) / n;
+    let soma = calcularEquacao(entrada, a) + calcularEquacao(entrada, b);
+
+    for (let i = 1; i < n; i++) {
+        let x = a + i * h;
+        if (i % 3 === 0) {
+            soma += 2 * calcularEquacao(entrada, x);
+        } else {
+            soma += 3 * calcularEquacao(entrada, x);
+        }
+    }
+    return (3 * h / 8) * soma;
+}
+
 // Função principal que organiza a execução do programa
 async function iniciarPrograma() {
     let entrada = await entradaDeDados();
@@ -275,12 +313,16 @@ async function iniciarPrograma() {
                         console.log(" \n---------------Cálculo da integral--------------- ");
                         const integral = calculaIntegral(entrada);
                         console.log("Cálculo da integral: ", montarEquacao(integral));
+                        let integralExata = calcularEquacao(integral, limiteMax) - calcularEquacao(integral, limiteMin);
+                        console.log(`Resultado da integral exata: ${integralExata.toFixed(4)}`);
                         let resultadoPontoMedio = pontoMedioRiemann(entrada, limiteMin, limiteMax, n);
                         console.log(`Resultado do ponto médio de Riemann: ${resultadoPontoMedio.toFixed(4)}`);
                         let calculoTrapezio = regraTrapezio(entrada, limiteMin, limiteMax, n);
                         console.log(`Resultado da Regra do Trapézio: ${calculoTrapezio.toFixed(4)}`);
-                        let integralExata = calcularEquacao(integral, limiteMax) - calcularEquacao(integral, limiteMin);
-                        console.log(`Resultado da integral exata: ${integralExata.toFixed(4)}`);
+                        let calculoSimpsonUmTerco = simpsonUmTerco(entrada, limiteMin, limiteMax, n);
+                        console.log(`Resultado da Regra de Simpson 1/3: ${calculoSimpsonUmTerco.toFixed(4)}`);  
+                        let calculoSimpsonTresOitavos = simpsonTresOitavos(entrada, limiteMin, limiteMax, n);
+                        console.log(`Resultado da Regra de Simpson 3/8: ${calculoSimpsonTresOitavos.toFixed(4)}`);                        
                         console.log("--------------------------------------------------");
                         rl.close();
                     });
