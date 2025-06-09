@@ -20,7 +20,7 @@
             <br>
             <label>Limite mínimo (a): <input type="number" placeholder="Informe o valor do limite mínimo" id="limiteMin" /></label>
             <label>Limite máximo (b): <input type="number" placeholder="Informe o valor do limite máximo" id="limiteMax" /></label>
-            <label>Partições (Riemann) (n): <input type="number"  id="particoes" value="1" min="1" /></label>
+            <label>Partições (n): <input type="number"  id="particoes" value="1" min="1" /></label>
 
         </div>
 
@@ -35,7 +35,7 @@
             <div class="keyboard" id="keyboard2">
                 <button>sin</button><button>cos</button><button>tan</button><button>^</button>
                 <button>ln</button><button>log</button><button>e</button><button>π</button>
-                <button>^2</button><button>^3</button><button>1/x</button><button>|x|</button>
+                <button>^2</button><button>^3</button><button>1/x</button><button>(x)</button>
                 <button id="del">DEL</button><button id="ac">AC</button><button>=</button><button>x!</button>
             </div>
         </div>
@@ -74,17 +74,30 @@
         </div>
         <div class="accordion" id="accordionIntegral" style="display: none;">
             <div class="accordion-item">
-                <div class="accordion-header" onclick="toggleAccordion(this)">PASSO 7: Integral</div>
+                <div class="accordion-header" onclick="toggleAccordion(this)">Integral</div>
                 <div class="accordion-body" id="passo7" style="display: none"></div>
             </div>
             <div class="accordion-item">
-                <div class="accordion-header" onclick="toggleAccordion(this)">PASSO 8: Resultado do ponto médio de Riemann (aproximação)</div>
+                <div class="accordion-header" onclick="toggleAccordion(this)">Resultado da soma de Riemann (integral exata)</div>
+                <div class="accordion-body" id="passo9" style="display: none"></div>
+            </div>
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">Resultado do ponto médio de Riemann (aproximação)</div>
                 <div class="accordion-body" id="passo8" style="display: none"></div>
             </div>
             <div class="accordion-item">
-                <div class="accordion-header" onclick="toggleAccordion(this)">PASSO 9: Resultado da soma de Riemann (integral exata)</div>
-                <div class="accordion-body" id="passo9" style="display: none"></div>
+                <div class="accordion-header" onclick="toggleAccordion(this)">Resultado da Regra do Trapézio (aproximação)</div>
+                <div class="accordion-body" id="passo10" style="display: none"></div>
             </div>
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">Resultado da Regra de Simpson 1/3 (aproximação)</div>
+                <div class="accordion-body" id="passo11" style="display: none"></div>
+            </div>
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">Resultado  da Regra de Simpson 3/8 (aproximação)</div>
+                <div class="accordion-body" id="passo12" style="display: none"></div>
+            </div>
+
         </div>
 
 

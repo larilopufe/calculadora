@@ -35,54 +35,161 @@ document.querySelectorAll('.keyboard button').forEach(btn => {
     });
 });
 
-// --- PARSER MELHORADO PARA POLINÔMIOS E CONSTANTE MULTIPLICADORA ---
-function parseFuncaoParaObjeto(funcaoStr) {
+// --- PARSER PARA POLINÔMIOS E CONSTANTE MULTIPLICADORA ---
+function entradaDeDados(funcaoStr) {
     let constante = [1, 1];
-    let funcao = funcaoStr.trim();
+    let digitado = funcaoStr.trim().replace(/\s+/g, "");
 
-    // Detecta padrão de constante multiplicadora (ex: 1/29* ou 2*)
-    let matchConst = funcao.match(/^([0-9]+)\/([0-9]+)\s*\*\s*/);
-    if (matchConst) {
-        constante = [parseInt(matchConst[1]), parseInt(matchConst[2])];
-        funcao = funcao.replace(matchConst[0], '');
-    } else {
-        let matchInt = funcao.match(/^([0-9]+)\s*\*\s*/);
-        if (matchInt) {
-            constante = [parseInt(matchInt[1]), 1];
-            funcao = funcao.replace(matchInt[0], '');
-        }
+    // Captura constante multiplicadora do tipo 1/15(...)
+    let matchConstante = digitado.match(/^([0-9]+)\/([0-9]+)\((.+)\)$/);
+    if (matchConstante) {
+        constante = [parseFloat(matchConstante[1]), parseFloat(matchConstante[2])];
+        digitado = matchConstante[3];
     }
 
-    // REMOVE PARÊNTESES
-    funcao = funcao.replace(/[()]/g, '');
+    // Se for do tipo a/b*..., também aceita
+    let matchConstante2 = digitado.match(/^([0-9]+)\/([0-9]+)\*(.+)$/);
+    if (matchConstante2) {
+        constante = [parseFloat(matchConstante2[1]), parseFloat(matchConstante2[2])];
+        digitado = matchConstante2[3];
+    }
 
-    // Divide termos, tratando sinais negativos
-    const termos = funcao.replace(/-/g, '+-').split('+').map(t => t.trim()).filter(t => t.length > 0);
+    // Divide termos por + e -, preservando sinais
+      let termos = [];
+    let termo = "";
+    for (let i = 0; i < digitado.length; i++) {
+        if (i > 0 && (digitado[i] === "+" || digitado[i] === "-") && digitado[i - 1] !== "^") {
+            termos.push(termo);
+            termo = digitado[i];
+        } else {
+            termo += digitado[i];
+        }
+    }
+    if (termo) termos.push(termo);
+
 
     const equacao = [];
-    for (const term of termos) {
-        if (!term) continue; // ignora termos vazios
-        let match = term.match(/^([+-]?\d*\.?\d*)x(?:\^(\d+))?$/i);
-        if (match) {
-            let coefRaw = match[1];
-            let coef = (coefRaw === '' || coefRaw === '+') ? 1 : (coefRaw === '-' ? -1 : Number(coefRaw));
-            let expo = match[2] ? Number(match[2]) : 1;
-            equacao.push({ coeficiente: coef, expoente: expo });
-        } else if (!isNaN(Number(term)) && term !== "") {
+    for (let t of termos) {
+        // Exponencial do tipo e^x ou e^(x^2)
+        let expMatch = t.match(/^([+-]?[0-9]*\.?[0-9]*)\*?e\^\(?([^)]+)\)?$/i);
+        if (expMatch) {
+            let coef = expMatch[1] === "" || expMatch[1] === "+" ? 1 : expMatch[1] === "-" ? -1 : parseFloat(expMatch[1]);
+            let expoenteStr = expMatch[2];
             equacao.push({
-                coeficiente: Number(term),
+                tipo: "exp",
+                coeficiente: coef,
+                base: Math.E,
+                expoenteStr: expoenteStr
+            });
+            continue;
+        }
+
+        // Exponencial do tipo a^x ou a^(k*x)
+        let expMatch2 = t.match(/^([+-]?[0-9]*\.?[0-9]*)\*?([0-9.]+)\^\(?([^)]+)\)?$/i);
+        if (expMatch2) {
+            let coef = expMatch2[1] === "" || expMatch2[1] === "+" ? 1 : expMatch2[1] === "-" ? -1 : parseFloat(expMatch2[1]);
+            let base = parseFloat(expMatch2[2]);
+            let expoenteStr = expMatch2[3];
+            equacao.push({
+                tipo: "exp",
+                coeficiente: coef,
+                base: base,
+                expoenteStr: expoenteStr
+            });
+            continue;
+        }
+
+        // Raiz do tipo 1/sqrt(x^n)
+        let raizMatch = t.match(/^([+-]?[0-9]*)\/sqrt\((x(?:\^([0-9]+))?)\)$/i);
+        if (raizMatch) {
+            let coef = raizMatch[1] ? parseFloat(raizMatch[1]) : 1;
+            let exp = raizMatch[3] ? parseFloat(raizMatch[3]) : 1;
+            equacao.push({
+                tipo: "pol",
+                coeficiente: coef,
+                expoente: 0.5 * exp
+            });
+            continue;
+        }
+
+        // Polinômio do tipo ax^n (com ou sem *)
+        let polMatch = t.match(/^([+-]?[0-9]*\.?[0-9]*)\*?x(?:\^([+-]?[0-9]+))?$/i);
+        if (polMatch) {
+            let coef = polMatch[1] === "" || polMatch[1] === "+" ? 1 : polMatch[1] === "-" ? -1 : parseFloat(polMatch[1]);
+            let exp = polMatch[2] ? parseFloat(polMatch[2]) : 1;
+            equacao.push({
+                tipo: "pol",
+                coeficiente: coef,
+                expoente: exp
+            });
+            continue;
+        }
+
+        // Polinômio do tipo x (coeficiente 1 ou -1)
+        let polMatch2 = t.match(/^([+-]?)x$/i);
+        if (polMatch2) {
+            let coef = polMatch2[1] === "-" ? -1 : 1;
+            equacao.push({
+                tipo: "pol",
+                coeficiente: coef,
+                expoente: 1
+            });
+            continue;
+        }
+
+        // Constante (ex: 3, -5)
+        let constMatch = t.match(/^([+-]?[0-9]+(\.[0-9]+)?)$/);
+        if (constMatch) {
+            equacao.push({
+                tipo: "pol",
+                coeficiente: parseFloat(constMatch[1]),
                 expoente: 0
             });
+            continue;
         }
-        // ignora termos inválidos
+
+        // 1/sqrt(x^n) sem coeficiente
+        let raizMatch2 = t.match(/^1\/sqrt\((x(?:\^([0-9]+))?)\)$/i);
+        if (raizMatch2) {
+            let exp = raizMatch2[2] ? parseFloat(raizMatch2[2]) : 1;
+            equacao.push({
+                tipo: "pol",
+                coeficiente: 1,
+                expoente: 0.5 * exp
+            });
+            continue;
+        }
+
+        // 1/x^n
+        let invMatch = t.match(/^1\/x\^([0-9]+)$/i);
+        if (invMatch) {
+            equacao.push({
+                tipo: "pol",
+                coeficiente: 1,
+                expoente: -parseFloat(invMatch[1])
+            });
+            continue;
+        }
+
+        // Se não reconhecido, tenta como constante
+        equacao.push({
+            tipo: "pol",
+            coeficiente: parseFloat(t) || 0,
+            expoente: 0
+        });
     }
 
     return { equacao, constante };
 }
-
-// --- MONTAR EQUAÇÃO FORMATADA ---
+// Função para montar a equação formatada
 function montarEquacao(entrada) {
-    if (!entrada || !entrada.equacao || entrada.equacao.length === 0) {
+    if (!entrada || !entrada.equacao) {
+        return "Equação inválida";
+    }
+    if (entrada.soNaoPol) {
+        return "Integral exata não implementada para funções não polinomiais.";
+    }
+    if (entrada.equacao.length === 0) {
         return "Equação inválida";
     }
     let verEquacao = "";
@@ -90,16 +197,27 @@ function montarEquacao(entrada) {
         verEquacao += entrada.constante[0] + "/" + entrada.constante[1] + "*(";
     }
     for (let i = 0; i < entrada.equacao.length; i++) {
-        if (i > 0 && entrada.equacao[i].coeficiente > 0) {
+        let termo = entrada.equacao[i];
+        if (i > 0 && termo.coeficiente > 0) {
             verEquacao += " + ";
-        } else if (i > 0 && entrada.equacao[i].coeficiente < 0) {
+        } else if (i > 0 && termo.coeficiente < 0) {
             verEquacao += " ";
         }
-        verEquacao += entrada.equacao[i].coeficiente;
-        if (entrada.equacao[i].expoente !== 0) {
-            verEquacao += "x";
-            if (entrada.equacao[i].expoente > 1) {
-                verEquacao += "^" + entrada.equacao[i].expoente;
+        if (termo.tipo === "ln") {
+            verEquacao += `${termo.coeficiente === 1 ? "" : termo.coeficiente + "*"}ln|x|`;
+        } else if (termo.tipo === "exp") {
+            if (termo.base === Math.E) {
+                verEquacao += `${termo.coeficiente === 1 ? "" : termo.coeficiente + "*"}e^(${termo.expoenteStr})`;
+            } else {
+                verEquacao += `${termo.coeficiente === 1 ? "" : termo.coeficiente + "*"}${termo.base}^(${termo.expoenteStr})`;
+            }
+        } else {
+            verEquacao += termo.coeficiente;
+            if (termo.expoente !== 0) {
+                verEquacao += "x";
+                if (termo.expoente !== 1) {
+                    verEquacao += "^" + termo.expoente;
+                }
             }
         }
     }
@@ -109,24 +227,60 @@ function montarEquacao(entrada) {
     return verEquacao;
 }
 
-// --- DERIVADA ---
+// Função para calcular a derivada
 function calculaDerivada(entrada) {
     if (!entrada || !entrada.equacao || entrada.equacao.length === 0) {
-        return { equacao: [], constante: entrada ? entrada.constante : [1, 1] };
+        console.log("Erro: Entrada inválida para cálculo da derivada.");
+        return null;
     }
-
     let derivada = [];
     let constanteMultiplicadora = entrada.constante;
-
-    for (let i = 0; i < entrada.equacao.length; i++) {
-        if (entrada.equacao[i].expoente > 0) {
-            derivada.push({
-                coeficiente: entrada.equacao[i].coeficiente * entrada.equacao[i].expoente,
-                expoente: entrada.equacao[i].expoente - 1
-            });
+    for (let termo of entrada.equacao) {
+        if (termo.tipo === "pol") {
+            if (termo.expoente > 0) {
+                derivada.push({
+                    tipo: "pol",
+                    coeficiente: termo.coeficiente * termo.expoente,
+                    expoente: termo.expoente - 1
+                });
+            }
+        } else if (termo.tipo === "exp") {
+            // Derivada de a^{g(x)} = a^{g(x)} * ln(a) * g'(x)
+            // Aqui só tratamos casos simples: expoenteStr = x ou kx
+            let g = termo.expoenteStr;
+            let coef = termo.coeficiente;
+            let base = termo.base;
+            if (g === "x") {
+                derivada.push({
+                    tipo: "exp",
+                    coeficiente: coef * Math.log(base),
+                    base: base,
+                    expoenteStr: g
+                });
+            } else if (/^[0-9.]*x$/.test(g)) {
+                // g(x) = kx
+                let k = parseFloat(g.replace("x", "")) || 1;
+                derivada.push({
+                    tipo: "exp",
+                    coeficiente: coef * Math.log(base) * k,
+                    base: base,
+                    expoenteStr: g
+                });
+            } else if (/^x\^([0-9.]+)$/.test(g)) {
+                // g(x) = x^n, derivada = n*x^(n-1)
+                let n = parseFloat(g.match(/^x\^([0-9.]+)$/)[1]);
+                derivada.push({
+                    tipo: "exp",
+                    coeficiente: coef * Math.log(base) * n * Math.pow(0, n - 1), // para x=0
+                    base: base,
+                    expoenteStr: g
+                });
+            } else {
+                // Não implementado para casos mais complexos
+                console.log("Derivada de exponencial com expoente complexo não implementada.");
+            }
         }
     }
-
     return { equacao: derivada, constante: constanteMultiplicadora };
 }
 
@@ -182,12 +336,28 @@ function pontoCritico(resultado) {
     return criticos;
 }
 
-// --- CALCULAR EQUAÇÃO PARA UM X ---
+// Função para calcular a equação substituindo por valores determinados de x
 function calcularEquacao(entrada, x) {
-    if (!entrada || !entrada.equacao) return NaN;
     let resposta = 0;
-    for (let i = 0; i < entrada.equacao.length; i++) {
-        resposta += entrada.equacao[i].coeficiente * Math.pow(x, entrada.equacao[i].expoente);
+    for (let termo of entrada.equacao) {
+        if (termo.tipo === "exp") {
+            // Suporta expoenteStr = x ou kx ou x^n
+            let expoente = 0;
+            if (termo.expoenteStr === "x") {
+                expoente = x;
+            } else if (/^[0-9.]*x$/.test(termo.expoenteStr)) {
+                let k = parseFloat(termo.expoenteStr.replace("x", "")) || 1;
+                expoente = k * x;
+            } else if (/^x\^([0-9.]+)$/.test(termo.expoenteStr)) {
+                let pot = parseFloat(termo.expoenteStr.match(/^x\^([0-9.]+)$/)[1]);
+                expoente = Math.pow(x, pot);
+            } else {
+                expoente = parseFloat(termo.expoenteStr) || 0;
+            }
+            resposta += termo.coeficiente * Math.pow(termo.base, expoente);
+        } else {
+            resposta += termo.coeficiente * Math.pow(x, termo.expoente);
+        }
     }
     let constanteMultiplicadora = entrada.constante[0] / entrada.constante[1];
     resposta *= constanteMultiplicadora;
@@ -210,17 +380,100 @@ function pontoMedioRiemann(entrada, a, b, n) {
 //cálculo integrar por soma exata usando o método soma de Riemann
 function calculaIntegral(entrada) {
     let integral = [];
-    for (let i = 0; i < entrada.equacao.length; i++) {
-        let termo = entrada.equacao[i];
-        let novoExpoente = termo.expoente + 1;
-        // Para constantes (expoente 0), novoExpoente será 1
-        integral.push({
-            coeficiente: termo.coeficiente / novoExpoente,
-            expoente: novoExpoente
-        });
+    let temNaoPol = false;
+    for (let termo of entrada.equacao) {
+        if (termo.tipo === "pol") {
+            if (termo.expoente === -1) {
+                // Integral de 1/x = ln|x|
+                integral.push({
+                    tipo: "ln",
+                    coeficiente: termo.coeficiente
+                });
+            } else {
+                let novoExpoente = termo.expoente + 1;
+                integral.push({
+                    tipo: "pol",
+                    coeficiente: termo.coeficiente / novoExpoente,
+                    expoente: novoExpoente
+                });
+            }
+        } else if (termo.tipo === "exp") {
+            // Só implementa para expoenteStr === "x"
+            if (termo.expoenteStr === "x") {
+                // ∫a^x dx = a^x / ln(a)
+                integral.push({
+                    tipo: "exp",
+                    coeficiente: termo.coeficiente / Math.log(termo.base),
+                    base: termo.base,
+                    expoenteStr: "x"
+                });
+            } else {
+                temNaoPol = true;
+            }
+        } else {
+            temNaoPol = true;
+        }
+    }
+    if (integral.length === 0 && temNaoPol) {
+        return { equacao: [], constante: entrada.constante, soNaoPol: true };
     }
     return { equacao: integral, constante: entrada.constante };
 }
+
+//calcular integral por aproximação usando a regra do Trapézio
+function regraTrapezio(entrada, a, b, n) {
+    let soma = 0;
+    let h = (b - a) / n;
+
+    for (let i = 0; i < n+1; i++) {        
+        let x = a + (i * h); 
+        if (x === a || x === b) {
+            soma += calcularEquacao(entrada, x);
+        } else {
+            soma += 2 * calcularEquacao(entrada, x);
+        }
+    }
+    return soma * h / 2;
+}
+
+// calcular integral por aproximação usando a Regra de Simpson 1/3
+function simpsonUmTerco(entrada, a, b, n) {
+    if (n % 2 !== 0) {
+        n += 1;
+    }
+    let h = (b - a) / n;
+    let soma = calcularEquacao(entrada, a) + calcularEquacao(entrada, b);
+
+    for (let i = 1; i < n; i++) {
+        let x = a + i * h;
+        if (i % 2 === 0) {
+            soma += 2 * calcularEquacao(entrada, x);
+        } else {
+            soma += 4 * calcularEquacao(entrada, x);
+        }
+    }
+    return (h / 3) * soma;
+}
+
+// calcular integral por aproximação usando a Regra de Simpson 3/8
+function simpsonTresOitavos(entrada, a, b, n) {
+    if (n % 3 !== 0) {
+        n += 3 - (n % 3);
+    }
+    let h = (b - a) / n;
+    let soma = calcularEquacao(entrada, a) + calcularEquacao(entrada, b);
+
+    for (let i = 1; i < n; i++) {
+        let x = a + i * h;
+        if (i % 3 === 0) {
+            soma += 2 * calcularEquacao(entrada, x);
+        } else {
+            soma += 3 * calcularEquacao(entrada, x);
+        }
+    }
+    return (3 * h / 8) * soma;
+}
+
 
 function mostrarSessaoDerivada() {
     document.getElementById('accordionDerivada').style.display = 'block';
@@ -247,7 +500,7 @@ document.getElementById('btnDerivada').addEventListener('click', function () {
     }
 
     // 1. Parse para objeto
-    const entrada = parseFuncaoParaObjeto(funcao);
+    const entrada = entradaDeDados(funcao);
 
     // 2. Montar equação formatada
     document.getElementById('funcaoMostrada').textContent = "Função formatada: " + montarEquacao(entrada);
@@ -325,35 +578,54 @@ document.getElementById('btnIntegral').addEventListener('click', function () {
     mostrarSessaoIntegral();
 
     const funcao = document.getElementById('inputFuncao').value;
-    const entrada = parseFuncaoParaObjeto(funcao);
+    const entrada = entradaDeDados(funcao);
 
-    //Passo 7: Cálculo da integral
+    //Montar equação formatada
+    document.getElementById('funcaoMostrada').textContent = "Função formatada: " + montarEquacao(entrada);
+
+    //Cálculo da integral
     let integral = calculaIntegral(entrada);
     document.getElementById('passo7').innerText = montarEquacao(integral);
     document.getElementById('passo7').style.display = "block";
-   
-    //Passo 8: Cálculo da integral por aproximação
-    const limiteMin = parseFloat(document.getElementById('limiteMin').value);   
+
+
+    //Cálculo da integral por aproximação de Riemann
+    const limiteMin = parseFloat(document.getElementById('limiteMin').value);
     const limiteMax = parseFloat(document.getElementById('limiteMax').value);
     const particoes = parseInt(document.getElementById('particoes').value);
     if (isNaN(limiteMin) || isNaN(limiteMax) || limiteMin >= limiteMax) {
         alert("Por favor, insira limites válidos.");
         return;
     }
+
+    //Cálculo da integral por soma exata
+    let integralExata = calcularEquacao(integral, limiteMax) - calcularEquacao(integral, limiteMin);
+    document.getElementById('passo9').innerText = integralExata.toFixed(4);
+    document.getElementById('passo9').style.display = "block";
+
+    //Cálculo da integral por aproximação de Riemann
     let integralAproximada = pontoMedioRiemann(entrada, limiteMin, limiteMax, particoes);
-    document.getElementById('passo8').innerText = integralAproximada.toFixed(2);
-    //abrirAccordion('passo8');
+    document.getElementById('passo8').innerText = integralAproximada.toFixed(4);
     document.getElementById('passo8').style.display = "block";
 
-    //Passo 9: Cálculo da integral por soma exata
-    let integralExata = calcularEquacao(integral, limiteMax) - calcularEquacao(integral, limiteMin);
-    document.getElementById('passo9').innerText = integralExata.toFixed(2);
-    //abrirAccordion('passo9');
-    document.getElementById('passo9').style.display = "block";
+    //Cálculo da integral pela Regra do Trapézio
+    let integralTrapezio = regraTrapezio(entrada, limiteMin, limiteMax, particoes);
+    document.getElementById('passo10').innerText = integralTrapezio.toFixed(4);
+    document.getElementById('passo10').style.display = "block";
+
+    //Cálculo da integral pela Regra de Simpson 1/3
+    let integralSimpson1 = simpsonUmTerco(entrada, limiteMin, limiteMax, particoes);
+    document.getElementById('passo11').innerText = integralSimpson1.toFixed(4);
+    document.getElementById('passo11').style.display = "block";
+
+    //Cálculo da integral pela Regra de Simpson 3/8
+    let integralSimpson2 = simpsonTresOitavos(entrada, limiteMin, limiteMax, particoes);
+    document.getElementById('passo12').innerText = integralSimpson2.toFixed(4);
+    document.getElementById('passo12').style.display = "block";
 });
 
 // Função para abrir apenas o acordeão desejado
 function abrirAccordion(id) {
     document.querySelectorAll('.accordion-body').forEach(div => div.style.display = 'none');
     document.getElementById(id).style.display = 'block';
-}
+}                                                                   
