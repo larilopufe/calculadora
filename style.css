@@ -36,11 +36,29 @@ header {
   text-align: center;
 }
 
+.input-section .campo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 10px 0;
+  margin-left: 250px;
+  margin-bottom: 20px;
+}
+
+.input-section label {
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #000;
+}
+
 .input-section input {
   width: 80%;
+  max-width: 650px;
   padding: 10px;
   font-size: 1rem;
   margin-top: 10px;
+  border: 1px solid #999;
+  border-radius: 0;
 }
 
 .input-section button {
@@ -57,8 +75,19 @@ header {
   display: flex;
   justify-content: center;
   gap: 40px;
-  padding: 20px;
+  position: fixed;
+  bottom: -400px; /* escondida inicialmente */
+  left: 0;
+  width: 100%;
   background-color: var(--bg-principal);
+  transition: bottom 0.3s ease-in-out;
+  z-index: 999;
+  padding: 20px 10px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.keyboards.active {
+  bottom: 0;
 }
 
 .keyboard {
