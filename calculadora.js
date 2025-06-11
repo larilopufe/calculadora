@@ -1,40 +1,3 @@
-
-// --- TECLADO VIRTUAL ---
-document.querySelectorAll('.keyboard button').forEach(btn => {
-    btn.addEventListener('click', function () {
-        const input = document.getElementById('inputFuncao');
-        const valor = this.textContent;
-
-        if (valor === 'DEL') {
-            input.value = input.value.slice(0, -1);
-        } else if (valor === 'AC') {
-            input.value = '';
-        } else if (valor === '=') {
-            // Não faz nada, cálculo é feito pelo botão Calcular
-        } else if (valor === 'x^') {
-            input.value += 'x^';
-        } else if (valor === '√') {
-            input.value += 'sqrt(';
-        } else if (valor === '^2') {
-            input.value += '^2';
-        } else if (valor === '^3') {
-            input.value += '^3';
-        } else if (valor === 'π') {
-            input.value += 'pi';
-        } else if (valor === 'e') {
-            input.value += 'e';
-        } else if (valor === '1/x') {
-            input.value += '1/';
-        } else if (valor === '|x|') {
-            input.value += 'abs(x)';
-        } else if (valor === 'x!') {
-            input.value += '!';
-        } else {
-            input.value += valor;
-        }
-    });
-});
-
 // --- PARSER PARA POLINÔMIOS E CONSTANTE MULTIPLICADORA ---
 function entradaDeDados(funcaoStr) {
     let constante = [1, 1];
@@ -629,3 +592,64 @@ function abrirAccordion(id) {
     document.querySelectorAll('.accordion-body').forEach(div => div.style.display = 'none');
     document.getElementById(id).style.display = 'block';
 }                                                                   
+
+
+
+// --- TECLADO VIRTUAL ---
+//Deixar o teclado móvel
+const tecladoDiv = document.getElementById("keyboards");
+let campoAtivo = null;
+
+// Mostrar teclado ao focar em qualquer input
+document.querySelectorAll("input[type='text'], input[type='number']").forEach(input => {
+    input.addEventListener("focus", () => {
+        campoAtivo = input;
+        tecladoDiv.classList.add("active");
+    });
+});
+
+// Esconder teclado ao clicar fora
+document.addEventListener("click", function (event) {
+    const clicouDentro =
+        tecladoDiv.contains(event.target) ||
+        (campoAtivo && campoAtivo.contains(event.target));
+    if (!clicouDentro) {
+        tecladoDiv.classList.remove("active");
+    }
+});
+
+// Inserir valores nos campos
+document.querySelectorAll(".keyboard button").forEach(botao => {
+    botao.addEventListener("click", () => {
+        if (!campoAtivo) return;
+        const valor = botao.textContent;
+
+        if (valor === 'DEL') {
+            campoAtivo.value = campoAtivo.value.slice(0, -1);
+        } else if (valor === 'AC') {
+            campoAtivo.value = '';
+        } else if (valor === '=') {
+            // nada, cálculo é manual
+        } else if (valor === 'x^') {
+            campoAtivo.value += 'x^';
+        } else if (valor === '√') {
+            campoAtivo.value += 'sqrt(';
+        } else if (valor === '^2') {
+            campoAtivo.value += '^2';
+        } else if (valor === '^3') {
+            campoAtivo.value += '^3';
+        } else if (valor === 'π') {
+            campoAtivo.value += 'pi';
+        } else if (valor === 'e') {
+            campoAtivo.value += 'e';
+        } else if (valor === '1/x') {
+            campoAtivo.value += '1/';
+        } else if (valor === '|x|') {
+            campoAtivo.value += 'abs(x)';
+        } else if (valor === 'x!') {
+            campoAtivo.value += '!';
+        } else {
+            campoAtivo.value += valor;
+        }
+    });
+});
