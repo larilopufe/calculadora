@@ -14,17 +14,27 @@
         <header>Calculadora de Derivadas e Integrais</header>
 
         <div class="input-section">
-            <input type="text" placeholder="Digite a função (ex: 2x^2 + 3x - 5)" id="inputFuncao" />
+            <div class="campo">
+                <label for="inputFuncao">Função 'f(x)':</label>
+                <input type="text" placeholder="Digite a função (ex: 2x^2 + 3x - 5)" id="inputFuncao" />
+            </div>
+            <div class="campo">
+                <label for="limiteMin">Limite mínimo (a):</label>
+                <input type="number" placeholder="Informe o valor do limite mínimo" id="limiteMin" />
+            </div>
+            <div class="campo">
+                <label for="limiteMax">Limite máximo (b):</label>
+                <input type="number" placeholder="Informe o valor do limite máximo" id="limiteMax" />
+            </div>
+            <div class="campo">
+                <label for="particoes">Partições (n):</label>
+                <input type="number" id="particoes" value="1" min="1" />
+            </div>
             <button id="btnDerivada">Calcular Derivada</button>
             <button id="btnIntegral">Calcular Integral</button>
-            <br>
-            <label>Limite mínimo (a): <input type="number" placeholder="Informe o valor do limite mínimo" id="limiteMin" /></label>
-            <label>Limite máximo (b): <input type="number" placeholder="Informe o valor do limite máximo" id="limiteMax" /></label>
-            <label>Partições (n): <input type="number"  id="particoes" value="1" min="1" /></label>
-
         </div>
 
-        <div class="keyboards">
+        <div class="keyboards" id="keyboards">
             <div class="keyboard" id="keyboard1">
                 <button>7</button><button>8</button><button>9</button><button>/</button>
                 <button>4</button><button>5</button><button>6</button><button>*</button>
@@ -97,16 +107,12 @@
                 <div class="accordion-header" onclick="toggleAccordion(this)">Resultado  da Regra de Simpson 3/8 (aproximação)</div>
                 <div class="accordion-body" id="passo12" style="display: none"></div>
             </div>
-
         </div>
-
-
+        
         <div class="graph-section">
             GRÁFICO AQUI (em breve)
         </div>
     </div>
-
     <script src="calculadora.js"></script>
 </body>
-
 </html>
