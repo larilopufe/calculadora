@@ -36,17 +36,18 @@
 
         <div class="keyboards" id="keyboards">
             <div class="keyboard" id="keyboard1">
+                <button>ln</button><button>(</button><button>)</button><button>π</button>
+                <button>x</button><button>e</button><button>1/x</button><button>/2</button>
+                <button>√</button><button>x^</button><button>^(1/2)</button><button>^(1/3)</button>
+                <button>^</button><button>x^</button><button>^2</button><button>^3</button>
+                <button>sin</button><button>cos</button><button>tan</button><button>log</button>
+            </div>
+            <div class="keyboard" id="keyboard2">
+                <button id="del">DEL</button><button id="ac">AC</button><button>!</button><button>=</button>
                 <button>7</button><button>8</button><button>9</button><button>/</button>
                 <button>4</button><button>5</button><button>6</button><button>*</button>
                 <button>1</button><button>2</button><button>3</button><button>-</button>
-                <button>0</button><button>.</button><button>x</button><button>+</button>
-                <button>(</button><button>)</button><button>x^</button><button>√</button>
-            </div>
-            <div class="keyboard" id="keyboard2">
-                <button>sin</button><button>cos</button><button>tan</button><button>^</button>
-                <button>ln</button><button>log</button><button>e</button><button>π</button>
-                <button>^2</button><button>^3</button><button>1/x</button><button>(x)</button>
-                <button id="del">DEL</button><button id="ac">AC</button><button>=</button><button>x!</button>
+                <button>.</button><button>0</button><button>,</button><button>+</button>
             </div>
         </div>
 
@@ -107,12 +108,16 @@
                 <div class="accordion-header" onclick="toggleAccordion(this)">Resultado  da Regra de Simpson 3/8 (aproximação)</div>
                 <div class="accordion-body" id="passo12" style="display: none"></div>
             </div>
+
         </div>
-        
+
+
         <div class="graph-section">
             GRÁFICO AQUI (em breve)
         </div>
     </div>
+
     <script src="calculadora.js"></script>
 </body>
+
 </html>
